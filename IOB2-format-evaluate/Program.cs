@@ -12,6 +12,10 @@ namespace IOB2_format_evaluate
         {
             StreamReader sr = new StreamReader(args[0]);
 
+            List<string> harmonicMeanType = new List<string>();
+            for (int i = 1; i < args.Length; i++)
+                harmonicMeanType.Add(args[i]);
+
             List<Tuple<string, int, int>> answerList = new List<Tuple<string, int, int>>(); //type, beginIndex, endIndex
             List<Tuple<string, int, int>> predictList = new List<Tuple<string, int, int>>();
             HashSet<string> type = new HashSet<string>();
@@ -91,6 +95,10 @@ namespace IOB2_format_evaluate
             int rightMatchTotal = 0;
             double p, r, f;
             string block;
+            double eP = 0, eR = 0, eF = 0;
+            double lP = 0, lR = 0, lF = 0;
+            double rP = 0, rR = 0, rF = 0;
+
             foreach (string t in type)
             {
                 int count_ans = 0;
@@ -108,7 +116,6 @@ namespace IOB2_format_evaluate
                         {
                             tp++;
                             exactMatchTotal++;
-
                         }
                         if (answerList.Contains(new Tuple<string, int, int>(l.Item1, -1, l.Item3)))
                         {
@@ -135,6 +142,11 @@ namespace IOB2_format_evaluate
                 block = String.Format("{0,32}", block);
                 Console.Write("|  " + String.Format("{0,-13}", t) + "|" + block);
 
+                if (harmonicMeanType.Contains(t))
+                {
+                    eP += 1/p;eR += 1/r;eF += 1/f;
+                }
+
                 //right match
                 p = Math.Round((double)right_tp / count_pre, 4);
                 r = Math.Round((double)right_tp / count_ans, 4);
@@ -143,6 +155,11 @@ namespace IOB2_format_evaluate
                 block = String.Format(String.Format("{0,6}", right_tp) + "(" + (Double.IsNaN(p) ? "X" : "{0:0.0000}") + " / " + (Double.IsNaN(r) ? "X" : "{1:0.0000}") + " / " + (Double.IsNaN(f) ? "X" : "{2:0.0000}") + ")", p, r, f);
                 block = String.Format("{0,32}", block);
                 Console.Write("\t|" + block);
+
+                if (harmonicMeanType.Contains(t))
+                {
+                    rP += 1/p;rR += 1/r;rF += 1/f;
+                }
 
                 //left match
                 p = Math.Round((double)left_tp / count_pre, 4);
@@ -154,6 +171,10 @@ namespace IOB2_format_evaluate
                 Console.WriteLine("\t|" + block + "   |");
                 Console.WriteLine("+---------------+-----------------------------------+-----------------------------------+-----------------------------------+");
 
+                if (harmonicMeanType.Contains(t))
+                {
+                    lP += 1/p;lR += 1/r;lF += 1/f;
+                }
             }
 
             Console.Write("|  " + String.Format("{0,-13}", "[-ALL-]"));
@@ -186,10 +207,42 @@ namespace IOB2_format_evaluate
 
             Console.WriteLine("+---------------+-----------------------------------+-----------------------------------+-----------------------------------+");
 
+            //Harmonic Mean
+            Console.Write("| " + String.Format("{0,-13}", "Harmonic Mean*"));
+
+            p = Math.Round((double)harmonicMeanType.Count / eP, 4);
+            r = Math.Round((double)(harmonicMeanType.Count / eR), 4);
+            f = Math.Round((double)(harmonicMeanType.Count / eF), 4);
+
+            block = String.Format( "(" + (Double.IsNaN(p) ? "X" : "{0:0.0000}") + " / " + (Double.IsNaN(r) ? "X" : "{1:0.0000}") + " / " + (Double.IsNaN(f) ? "X" : "{2:0.0000}") + ")", p, r, f);
+            block = String.Format("{0,32}", block);
+            Console.Write("|" + block + "   |");
+
+            p = Math.Round((double)harmonicMeanType.Count / lP, 4);
+            r = Math.Round((double)(harmonicMeanType.Count / lR), 4);
+            f = Math.Round((double)(harmonicMeanType.Count / lF), 4);
+
+            block = String.Format("(" + (Double.IsNaN(p) ? "X" : "{0:0.0000}") + " / " + (Double.IsNaN(r) ? "X" : "{1:0.0000}") + " / " + (Double.IsNaN(f) ? "X" : "{2:0.0000}") + ")", p, r, f);
+            block = String.Format("{0,32}", block);
+            Console.Write( block + "   |");
+
+            p = Math.Round((double)harmonicMeanType.Count / rP, 4);
+            r = Math.Round((double)(harmonicMeanType.Count / rR), 4);
+            f = Math.Round((double)(harmonicMeanType.Count / rF), 4);
+
+            block = String.Format("(" + (Double.IsNaN(p) ? "X" : "{0:0.0000}") + " / " + (Double.IsNaN(r) ? "X" : "{1:0.0000}") + " / " + (Double.IsNaN(f) ? "X" : "{2:0.0000}") + ")", p, r, f);
+            block = String.Format("{0,32}", block);
+            Console.WriteLine(block + "   |");
 
 
+
+            Console.WriteLine("+---------------+-----------------------------------+-----------------------------------+-----------------------------------+");
             Console.WriteLine("Token-level Accuracy\t" + (double)AccSameCount / AccAllCount);
-            
+
+            Console.Write("\n\n*Harmonic Mean is calcuate by following type: ");
+            foreach (string s in harmonicMeanType)
+                Console.Write(s + " ");
+            Console.WriteLine();
         }
         static string ExtractType(string IOB2)
         {
