@@ -16,9 +16,10 @@ namespace IOB2_format_evaluate
             for (int i = 1; i < args.Length; i++)
                 harmonicMeanType.Add(args[i]);
 
-            List<Tuple<string, int, int>> answerList = new List<Tuple<string, int, int>>(); //type, beginIndex, endIndex
-            List<Tuple<string, int, int>> predictList = new List<Tuple<string, int, int>>();
+            Dictionary<Tuple<int, int>, string> answerList = new Dictionary<Tuple<int, int>, string>();
+            Dictionary<Tuple<int, int>, string> predictList = new Dictionary<Tuple<int, int>, string>();
             HashSet<string> type = new HashSet<string>();
+
 
             int AccSameCount = 0;
             int AccAllCount = 0;
@@ -34,12 +35,12 @@ namespace IOB2_format_evaluate
                 {
                     if (beginPositionAns != -1)
                     {
-                        answerList.Add(new Tuple<string, int, int>(nowStatAns, beginPositionAns, loop - 1));
-                        answerList.Add(new Tuple<string, int, int>(nowStatAns, beginPositionAns, -1));
-                        answerList.Add(new Tuple<string, int, int>(nowStatAns, -1, loop - 1));
+                        answerList.Add(new Tuple<int, int>(beginPositionAns, loop - 1), nowStatAns);
+                        answerList.Add(new Tuple<int, int>(beginPositionAns, -1), nowStatAns);
+                        answerList.Add(new Tuple<int, int>(-1, loop - 1), nowStatAns);
                     }
                     if (beginPositionPre != -1)
-                        predictList.Add(new Tuple<string, int, int>(nowStatPre, beginPositionPre, loop - 1));
+                        predictList.Add(new Tuple<int, int>(beginPositionPre, loop - 1), nowStatPre);
 
                     //restart
                     beginPositionAns = -1;
@@ -61,9 +62,9 @@ namespace IOB2_format_evaluate
                 //ans
                 if (!nowStatAns.Equals(answer) && !nowStatAns.Equals(String.Empty))
                 {
-                    answerList.Add(new Tuple<string, int, int>(nowStatAns, beginPositionAns, loop - 1));
-                    answerList.Add(new Tuple<string, int, int>(nowStatAns, beginPositionAns, -1));
-                    answerList.Add(new Tuple<string, int, int>(nowStatAns, -1, loop - 1));
+                    answerList.Add(new Tuple<int, int>(beginPositionAns, loop - 1), nowStatAns);
+                    answerList.Add(new Tuple<int, int>(beginPositionAns, -1), nowStatAns);
+                    answerList.Add(new Tuple<int, int>(-1, loop - 1), nowStatAns);
                 }
                 if (!nowStatAns.Equals(answer) || nowStatAns.Equals(String.Empty))
                     beginPositionAns = loop;
@@ -72,7 +73,7 @@ namespace IOB2_format_evaluate
 
                 //predict
                 if (!nowStatPre.Equals(answer) && !nowStatPre.Equals(String.Empty))
-                    predictList.Add(new Tuple<string, int, int>(nowStatPre, beginPositionPre, loop - 1));
+                    predictList.Add(new Tuple<int, int>(beginPositionPre, loop - 1), nowStatPre);
                 if (!nowStatPre.Equals(answer) || nowStatPre.Equals(String.Empty))
                     beginPositionPre = loop;
 
@@ -105,11 +106,11 @@ namespace IOB2_format_evaluate
                 int count_pre = 0;
                 int tp = 0, left_tp = 0, right_tp = 0;
 
-                foreach (Tuple<string, int, int> l in predictList)
+                foreach (KeyValuePair<Tuple<int, int>, string> l in predictList)
                 {
-                    if (l.Item1 == t)
+                    if (l.Value == t)
                     {
-                        if (l.Item2 != -1 && l.Item3 != -1)
+                        if (l.Key.Item1 != -1 && l.Key.Item2 != -1)
                             count_pre++;
 
                         if (answerList.Contains(l))
@@ -117,20 +118,20 @@ namespace IOB2_format_evaluate
                             tp++;
                             exactMatchTotal++;
                         }
-                        if (answerList.Contains(new Tuple<string, int, int>(l.Item1, -1, l.Item3)))
+                        if (answerList.ContainsKey(new Tuple<int, int>(-1, l.Key.Item2)) && answerList[new Tuple<int, int>(-1, l.Key.Item2)].Equals(l.Value))
                         {
                             right_tp++;
                             rightMatchTotal++;
                         }
-                        if (answerList.Contains(new Tuple<string, int, int>(l.Item1, l.Item2, -1)))
+                        if (answerList.ContainsKey(new Tuple<int, int>(l.Key.Item1, -1)) && answerList[new Tuple<int, int>(l.Key.Item1, -1)].Equals(l.Value))
                         {
                             left_tp++;
                             leftMatchTotal++;
                         }
                     }
                 }
-                foreach (Tuple<string, int, int> l in answerList)
-                    if (l.Item1 == t && l.Item2 != -1 && l.Item3 != -1)
+                foreach (KeyValuePair<Tuple<int, int>, string> l in answerList)
+                    if (l.Value == t && l.Key.Item1 != -1 && l.Key.Item2 != -1)
                         count_ans++;
 
                 //exact match
@@ -208,41 +209,46 @@ namespace IOB2_format_evaluate
             Console.WriteLine("+---------------+-----------------------------------+-----------------------------------+-----------------------------------+");
 
             //Harmonic Mean
-            Console.Write("| " + String.Format("{0,-13}", "Harmonic Mean*"));
 
-            p = Math.Round((double)harmonicMeanType.Count / eP, 4);
-            r = Math.Round((double)(harmonicMeanType.Count / eR), 4);
-            f = Math.Round((double)(harmonicMeanType.Count / eF), 4);
+            if (harmonicMeanType.Count > 0)
+            {
+                Console.Write("| " + String.Format("{0,-13}", "Harmonic Mean*"));
 
-            block = String.Format( "(" + (Double.IsNaN(p) ? "X" : "{0:0.0000}") + " / " + (Double.IsNaN(r) ? "X" : "{1:0.0000}") + " / " + (Double.IsNaN(f) ? "X" : "{2:0.0000}") + ")", p, r, f);
-            block = String.Format("{0,32}", block);
-            Console.Write("|" + block + "   |");
+                p = Math.Round((double)harmonicMeanType.Count / eP, 4);
+                r = Math.Round((double)(harmonicMeanType.Count / eR), 4);
+                f = Math.Round((double)(harmonicMeanType.Count / eF), 4);
 
-            p = Math.Round((double)harmonicMeanType.Count / lP, 4);
-            r = Math.Round((double)(harmonicMeanType.Count / lR), 4);
-            f = Math.Round((double)(harmonicMeanType.Count / lF), 4);
+                block = String.Format("(" + (Double.IsNaN(p) ? "X" : "{0:0.0000}") + " / " + (Double.IsNaN(r) ? "X" : "{1:0.0000}") + " / " + (Double.IsNaN(f) ? "X" : "{2:0.0000}") + ")", p, r, f);
+                block = String.Format("{0,32}", block);
+                Console.Write("|" + block + "   |");
 
-            block = String.Format("(" + (Double.IsNaN(p) ? "X" : "{0:0.0000}") + " / " + (Double.IsNaN(r) ? "X" : "{1:0.0000}") + " / " + (Double.IsNaN(f) ? "X" : "{2:0.0000}") + ")", p, r, f);
-            block = String.Format("{0,32}", block);
-            Console.Write( block + "   |");
+                p = Math.Round((double)harmonicMeanType.Count / lP, 4);
+                r = Math.Round((double)(harmonicMeanType.Count / lR), 4);
+                f = Math.Round((double)(harmonicMeanType.Count / lF), 4);
 
-            p = Math.Round((double)harmonicMeanType.Count / rP, 4);
-            r = Math.Round((double)(harmonicMeanType.Count / rR), 4);
-            f = Math.Round((double)(harmonicMeanType.Count / rF), 4);
+                block = String.Format("(" + (Double.IsNaN(p) ? "X" : "{0:0.0000}") + " / " + (Double.IsNaN(r) ? "X" : "{1:0.0000}") + " / " + (Double.IsNaN(f) ? "X" : "{2:0.0000}") + ")", p, r, f);
+                block = String.Format("{0,32}", block);
+                Console.Write(block + "   |");
 
-            block = String.Format("(" + (Double.IsNaN(p) ? "X" : "{0:0.0000}") + " / " + (Double.IsNaN(r) ? "X" : "{1:0.0000}") + " / " + (Double.IsNaN(f) ? "X" : "{2:0.0000}") + ")", p, r, f);
-            block = String.Format("{0,32}", block);
-            Console.WriteLine(block + "   |");
+                p = Math.Round((double)harmonicMeanType.Count / rP, 4);
+                r = Math.Round((double)(harmonicMeanType.Count / rR), 4);
+                f = Math.Round((double)(harmonicMeanType.Count / rF), 4);
 
+                block = String.Format("(" + (Double.IsNaN(p) ? "X" : "{0:0.0000}") + " / " + (Double.IsNaN(r) ? "X" : "{1:0.0000}") + " / " + (Double.IsNaN(f) ? "X" : "{2:0.0000}") + ")", p, r, f);
+                block = String.Format("{0,32}", block);
+                Console.WriteLine(block + "   |");
 
-
-            Console.WriteLine("+---------------+-----------------------------------+-----------------------------------+-----------------------------------+");
+                Console.WriteLine("+---------------+-----------------------------------+-----------------------------------+-----------------------------------+");
+            }
             Console.WriteLine("Token-level Accuracy\t" + (double)AccSameCount / AccAllCount);
 
-            Console.Write("\n\n*Harmonic Mean is calcuate by following type: ");
-            foreach (string s in harmonicMeanType)
-                Console.Write(s + " ");
-            Console.WriteLine();
+            if (harmonicMeanType.Count > 0)
+            {
+                Console.Write("\n\n*Harmonic Mean is calcuate by following type: ");
+                foreach (string s in harmonicMeanType)
+                    Console.Write(s + " ");
+                Console.WriteLine();
+            }
         }
         static string ExtractType(string IOB2)
         {
