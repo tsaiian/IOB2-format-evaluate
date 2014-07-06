@@ -256,7 +256,7 @@ namespace IOB2_format_evaluate
 
             if (harmonicMeanType.Count > 0)
             {
-                Console.Write("\n\n*Harmonic Mean is calcuate by following type: ");
+                Console.Write("\n\n*Harmonic Mean is calculate by following type: ");
                 foreach (string s in harmonicMeanType)
                     Console.Write(s + " ");
                 Console.WriteLine();
