@@ -26,7 +26,9 @@ namespace IOB2_format_evaluate
 
             string nowStatAns = String.Empty, nowStatPre = String.Empty;
             int beginPositionAns = -1, beginPositionPre = -1;
-            
+
+            int instanceLevelTotal = 0, instanceLevelCorrect = 0;
+            bool stillCorrect = true;
             for (int loop = 1; !sr.EndOfStream; loop++ )
             {
                 string line = sr.ReadLine();
@@ -35,14 +37,21 @@ namespace IOB2_format_evaluate
                 {
                     if (beginPositionAns != -1)
                     {
+                        instanceLevelTotal++;
+                        if (stillCorrect)
+                            instanceLevelCorrect++;
+
                         answerList.Add(new Tuple<int, int>(beginPositionAns, loop - 1), nowStatAns);
                         answerList.Add(new Tuple<int, int>(beginPositionAns, -1), nowStatAns);
                         answerList.Add(new Tuple<int, int>(-1, loop - 1), nowStatAns);
+
+                        
                     }
                     if (beginPositionPre != -1)
                         predictList.Add(new Tuple<int, int>(beginPositionPre, loop - 1), nowStatPre);
 
                     //restart
+                    stillCorrect = true;
                     beginPositionAns = -1;
                     beginPositionPre = -1;
                     nowStatAns = String.Empty;
@@ -82,6 +91,8 @@ namespace IOB2_format_evaluate
 
                 if (predict.Equals(answer))
                     AccSameCount++;
+                else
+                    stillCorrect = false;
                 AccAllCount++;
 
             }
@@ -241,6 +252,7 @@ namespace IOB2_format_evaluate
                 Console.WriteLine("+---------------+-----------------------------------+-----------------------------------+-----------------------------------+");
             }
             Console.WriteLine("Token-level Accuracy\t" + (double)AccSameCount / AccAllCount);
+            Console.WriteLine("Instance-level Accuracy\t" + (double)instanceLevelCorrect / instanceLevelTotal);
 
             if (harmonicMeanType.Count > 0)
             {
