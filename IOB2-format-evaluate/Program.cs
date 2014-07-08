@@ -32,8 +32,7 @@ namespace IOB2_format_evaluate
             for (int loop = 1; !sr.EndOfStream; loop++ )
             {
                 string line = sr.ReadLine();
-
-                if (line.Equals(String.Empty) )
+                if (line.Equals(String.Empty))
                 {
                     if (beginPositionAns != -1)
                     {
@@ -81,9 +80,9 @@ namespace IOB2_format_evaluate
                 nowStatAns = answer;
 
                 //predict
-                if (!nowStatPre.Equals(answer) && !nowStatPre.Equals(String.Empty))
+                if (!nowStatPre.Equals(predict) && !nowStatPre.Equals(String.Empty))
                     predictList.Add(new Tuple<int, int>(beginPositionPre, loop - 1), nowStatPre);
-                if (!nowStatPre.Equals(answer) || nowStatPre.Equals(String.Empty))
+                if (!nowStatPre.Equals(predict) || nowStatPre.Equals(String.Empty))
                     beginPositionPre = loop;
 
                 nowStatPre = predict;
@@ -121,8 +120,7 @@ namespace IOB2_format_evaluate
                 {
                     if (l.Value == t)
                     {
-                        if (l.Key.Item1 != -1 && l.Key.Item2 != -1)
-                            count_pre++;
+                        count_pre++;
 
                         if (answerList.Contains(l))
                         {
@@ -256,7 +254,7 @@ namespace IOB2_format_evaluate
 
             if (harmonicMeanType.Count > 0)
             {
-                Console.Write("\n\n*Harmonic Mean is calculate by following type: ");
+                Console.Write("\n\n*Harmonic Mean is calculate by following type(s): ");
                 foreach (string s in harmonicMeanType)
                     Console.Write(s + " ");
                 Console.WriteLine();
